@@ -1,6 +1,7 @@
 [English](README.md) | 日本語
 
 # astro-notion-blog
+
 [![GitHub stars](https://img.shields.io/github/stars/YuanzhongLi/astro-notion-blog-template)](https://github.com/YuanzhongLi/astro-notion-blog-template/stargazers)
 
 <img src="/public/default-og-image.png" width="480">
@@ -15,7 +16,9 @@ astro-notion-blog-templateは**[astro-notion-blog](https://github.com/otoyo/astr
 - :white_check_mark: **Notion 公式 API**を使っているため安心
 
 詳細については[astro-notion-blog](https://github.com/otoyo/astro-notion-blog)を参考にしてください.otoyoさんに感謝を示します。また気に入ったら元のリポジトリにもスターを付けてください！
+
 ## astro-notion-blog
+
 [![GitHub stars](https://img.shields.io/github/stars/otoyo/astro-notion-blog)](https://github.com/otoyo/astro-notion-blog/stargazers)
 [![GitHub license](https://img.shields.io/github/license/otoyo/astro-notion-blog)](https://github.com/otoyo/astro-notion-blog/blob/main/LICENSE)
 [![GitHub sponsors](https://img.shields.io/static/v1?label=Sponsor&message=%E2%9D%A4&logo=GitHub&color=%23fe8e86)](https://github.com/sponsors/otoyo)
@@ -23,12 +26,15 @@ astro-notion-blog-templateは**[astro-notion-blog](https://github.com/otoyo/astr
 ## :camera_flash: スクリーンショット
 
 ### PC
+
 <img src="/README/PC_image.png" width="600">
 
 ### スマートフォン
+
 <img src="/README/Mobile_image.png" width="300">
 
 ## :globe_with_meridians: 本番環境
+
 [astro-notion-blog-template.pages.dev](https://astro-notion-blog-template.pages.dev/)
 
 ## :motor_scooter: クイックスタート
@@ -39,9 +45,10 @@ astro-notion-blog-templateは**[astro-notion-blog](https://github.com/otoyo/astr
 - [Cloudflare Pages](https://pages.cloudflare.com/)
 
 ### ステップ
+
 1. [astro-notion-blogのブログテンプレート](https://otoyo.notion.site/e2c5fa2e8660452988d6137ba57fd974?v=abe305cd8b3d467285e91a2a85f4d8de) を自分の Notion へ複製します
 2. 複製したページ(データベース)のアイコン、タイトル、説明を変更します
-   -  ブログのタイトルとAboutページはハードコーディングしているのでその部分の実コードを変更する必要があります。
+   - ブログのタイトルとAboutページはハードコーディングしているのでその部分の実コードを変更する必要があります。
 
 <img src="https://user-images.githubusercontent.com/1063435/223611473-09e87aba-ad3b-4380-a74f-58c3c5804c39.png" width="600">
 
@@ -62,10 +69,10 @@ astro-notion-blog-templateは**[astro-notion-blog](https://github.com/otoyo/astr
 
 8. プロジェクトを "Connect to Git" を選んで作成し、先ほどフォークした `<your-account>/astro-notion-blog` リポジトリを選んで "Begin setup" をクリックします
 9. 「ビルドの設定」で、
-    1. 「フレームワーク プリセット」で Astro を選択します
-    2. 「環境変数(アドバンスド)」 を開き `NODE_VERSION`, `NOTION_API_SECRET`, `DATABASE_ID` の 3 つを設定します
-       - `NODE_VERSION` は `v18.16.0` かそれ以上を指定します
-       - 詳しくは [How to deploy a site with Git](https://docs.astro.build/en/guides/deploy/cloudflare/#how-to-deploy-a-site-with-git) をご覧ください
+   1. 「フレームワーク プリセット」で Astro を選択します
+   2. 「環境変数(アドバンスド)」 を開き `NODE_VERSION`, `NOTION_API_SECRET`, `DATABASE_ID` の 3 つを設定します
+      - `NODE_VERSION` は `v18.16.0` かそれ以上を指定します
+      - 詳しくは [How to deploy a site with Git](https://docs.astro.build/en/guides/deploy/cloudflare/#how-to-deploy-a-site-with-git) をご覧ください
 
 <img src="https://user-images.githubusercontent.com/1063435/213967111-72ea2ad1-ad3b-4629-8b65-7b25bc6ddb31.png" width="400">
 

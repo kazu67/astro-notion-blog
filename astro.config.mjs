@@ -25,7 +25,7 @@ const getSite = () => {
       `https://${new URL(process.env.CF_PAGES_URL).host
         .split('.')
         .slice(1)
-        .join('.')}`,
+        .join('.')}`
     ).toString();
   }
 

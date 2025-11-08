@@ -1,4 +1,4 @@
-export type Icon = FileObject | Emoji | null;
+export type Icon = FileObject | Emoji | null
 
 export interface Database {
   Title: string
