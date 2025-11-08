@@ -1,0 +1,60 @@
+---
+import { type Icon } from '../../../lib/interfaces';
+
+export interface Props {
+  title: string
+  icon: Icon
+}
+
+const { title = '', icon = null } = Astro.props;
+---
+<h2 class="post-title">
+  {icon && icon.Type === 'emoji' ? (
+    <>
+      <span>{icon.Emoji}</span>
+      {title}
+    </>
+  ) : icon && icon.Type === 'external' ? (
+    <>
+      <img src={icon.Url} alt="Post title icon" />
+      {title}
+    </>
+  ) : (
+    title
+  )}
+</h2>
+
+<style>
+  .post-title {
+    margin: 0;
+    padding: 0.2rem 0;
+    font-size: 2rem;
+    font-weight: 700;
+    color: var(--fg);
+  }
+  .post-title a {
+    font-size: 1.6rem;
+    color: inherit;
+  }
+  .post-title span,
+  .post-title img {
+    display: inline-block;
+    margin-right: 0.2em;
+  }
+  .post-title span {
+    font-size: 1.2em;
+  }
+  .post-title img {
+    width: 1.3em;
+    height: 1.3em;
+    vertical-align: sub;
+  }
+  @media (max-width: 640px) {
+    .post-title {
+      font-size: 1.4rem;
+    }
+    .post-title a {
+      font-size: 1.2rem;
+    }
+  }
+</style>

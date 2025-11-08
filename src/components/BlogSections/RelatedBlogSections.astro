@@ -1,0 +1,19 @@
+---
+import BlogSection from './BlogSection.astro';
+import type { Post } from '../../lib/interfaces';
+
+export interface Props {
+  posts: Post[];
+}
+
+const { posts } = Astro.props;
+---
+<div class="md:w-[80vw] lg:w-[70vw]
+  px-4 md:px-0 py-5 md:mx-auto"
+>
+  <div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
+    {posts.map((post) => (
+      <BlogSection post={post} />
+    ))}
+  </div>
+</div>

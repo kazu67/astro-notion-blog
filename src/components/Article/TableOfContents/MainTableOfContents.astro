@@ -1,0 +1,223 @@
+---
+import {
+  type Block, type RichText,
+  type Heading1, type Heading2, type Heading3,
+} from '../../../lib/interfaces';
+import { buildHeadingId } from '../../../lib/blog-helpers';
+import '../../../styles/notion-color.css';
+
+export interface Props {
+  headings: Block[]
+}
+
+const { headings } = Astro.props;
+---
+<div class="main-table-of-content">
+  <details class="js-details">
+    <summary class="js-summary">
+      <span class="summary_inner">
+        目次<span class="icon"></span>
+      </span>
+    </summary>
+    <div class="content js-content">
+      <ul class="content_inner">
+        {
+          headings.map((headingBlock: Block) => {
+            const heading = headingBlock.Heading1
+              || headingBlock.Heading2
+              || headingBlock.Heading3 as (Heading1 | Heading2 | Heading3);
+
+            let indentClass = '';
+            if (headingBlock.Type === 'heading_2') {
+              indentClass = 'indent-1';
+            } else if (headingBlock.Type === 'heading_3') {
+              indentClass = 'indent-2';
+            }
+
+            return (
+              <li>
+                <a
+                  href={`#${buildHeadingId(heading)}`}
+                  class={`${indentClass} hover:text-emerald-500 dark:text-slate-400 dark:hover:text-emerald-400`}
+                >
+                  {heading.RichTexts.map(
+                    (richText: RichText) => richText.PlainText,
+                  ).join('')}
+                </a>
+              </li>
+            );
+          })
+        }
+      </ul>
+    </div>
+  </details>
+</div>
+
+<style>
+  @media (min-width: 1280px) {
+    .main-table-of-content {
+      display: none;
+    }
+  }
+
+  summary {
+    /* display: list-item;以外を指定してデフォルトの三角形アイコンを消します */
+    display: block;
+  }
+
+  summary::-webkit-details-marker {
+    /* Safariで表示されるデフォルトの三角形アイコンを消します */
+    display: none;
+  }
+
+  .summary_inner{
+    cursor: pointer;
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+    padding: 16px 24px;
+    border: 1px solid black;
+    font-weight: bold;
+    color: white;
+    background-color: black;
+  }
+
+  .icon {
+    display: block;
+    position: relative;
+    width: 24px;
+    margin-left: 6px;
+    flex-shrink: 0;
+    transform-origin: center 43%;
+    transition: transform 0.4s;
+  }
+
+  /* is-openedクラスが付与されたときのスタイル */
+  details.is-opened .icon {
+    transform: rotate(180deg);
+  }
+
+  /* アイコンのバーのスタイル */
+  .icon::before,
+  .icon::after {
+    content: "";
+    position: absolute;
+    display: block;
+    width: 15px;
+    height: 3px;
+    background-color: white;
+  }
+
+  .icon::before {
+    left: 0;
+    transform: rotate(45deg);
+  }
+
+  .icon::after {
+    right: 0;
+    transform: rotate(-45deg);
+  }
+
+  /* --------アコーディオンの中身のスタイル-------- */
+  .content {
+    overflow: hidden;
+
+    /* details直下のタグにpaddingを設定すると挙動がおかしくなるので、ここには指定しない */
+  }
+
+  .content_inner {
+    padding: 24px 48px;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    border: 1px solid black;
+  }
+
+  .content_inner > li > a.indent-1 {
+    padding-left: 1.5rem;
+  }
+
+  .content_inner > li > a.indent-2 {
+    padding-left: 3rem;
+  }
+</style>
+
+<script>
+import { gsap } from "gsap";
+
+document.addEventListener("DOMContentLoaded", () => {
+  setUpAccordion();
+});
+
+/**
+ * ライブラリ(GSAP)を使ってアコーディオンのアニメーションを制御します
+ */
+const setUpAccordion = () => {
+  const details = document.querySelectorAll(".js-details");
+  const IS_OPENED_CLASS = "is-opened"; // アイコン操作用のクラス名
+
+  details.forEach((element) => {
+    const summary = element.querySelector(".js-summary") as Element;
+    const content = element.querySelector(".js-content") as Element;
+
+    summary.addEventListener("click", (event) => {
+      // デフォルトの挙動を無効化
+      event.preventDefault();
+
+      // is-openedクラスの有無で判定（detailsのopen属性の判定だと、アニメーション完了を待つ必要がありタイミング的に不安定になるため）
+      if (element.classList.contains(IS_OPENED_CLASS)) {
+        // アコーディオンを閉じるときの処理
+        // アイコン操作用クラスを切り替える(クラスを取り除く)
+        element.classList.toggle(IS_OPENED_CLASS);
+
+        // アニメーション実行
+        closingAnim(content, element).restart();
+      } else {
+        // アコーディオンを開くときの処理
+        // アイコン操作用クラスを切り替える(クラスを付与)
+        element.classList.toggle(IS_OPENED_CLASS);
+
+        // open属性を付与
+        element.setAttribute("open", "true");
+
+        // アニメーション実行
+        openingAnim(content).restart();
+      }
+    });
+  });
+}
+
+/**
+ * アコーディオンを閉じる時のアニメーション
+ */
+const closingAnim = (content: Element, element: Element) => gsap.to(content, {
+  height: 0,
+  opacity: 0,
+  duration: 0.4,
+  ease: "power3.out",
+  overwrite: true,
+  onComplete: () => {
+    // アニメーションの完了後にopen属性を取り除く
+    element.removeAttribute("open");
+  },
+});
+
+/**
+ * アコーディオンを開く時のアニメーション
+ */
+const openingAnim = (content: Element) => gsap.fromTo(
+  content,
+  {
+    height: 0,
+    opacity: 0,
+  },
+  {
+    height: "auto",
+    opacity: 1,
+    duration: 0.4,
+    ease: "power3.out",
+    overwrite: true,
+  });
+
+</script>

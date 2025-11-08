@@ -1,0 +1,13 @@
+---
+export interface Props {
+  href: string
+  content: string
+}
+
+const { href = '/', content = 'content' } = Astro.props;
+---
+<a
+  class="font-medium text-gray-500 hover:text-emerald-500 px-6
+  sm:py-6 sm:px-0 dark:text-gray-400 dark:hover:text-gray-500" href={href}>
+  { content }
+</a>

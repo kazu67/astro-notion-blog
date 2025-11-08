@@ -1,96 +1,108 @@
 ---
-import * as interfaces from '../../lib/interfaces.ts'
+import * as interfaces from '../../lib/interfaces';
 import {
-  getPosts,
   getAllPosts,
-  getRankedPosts,
   getPostBySlug,
-  getPostsByTag,
+  getTagNamesByPost,
+  getPostsByTags,
+  retrieveRelatedPostsWithoutCurrentPost,
   getBlock,
-  getAllTags,
   getAllBlocksByBlockId,
   downloadFile,
-} from '../../lib/notion/client.ts'
+} from '../../lib/notion/client';
 import {
   getPostLink,
   filePath,
   extractTargetBlocks,
-} from '../../lib/blog-helpers.ts'
-import Layout from '../../layouts/Layout.astro'
-import PostDate from '../../components/PostDate.astro'
-import PostTags from '../../components/PostTags.astro'
-import PostTitle from '../../components/PostTitle.astro'
-import PostBody from '../../components/PostBody.astro'
-import PostRelativeLink from '../../components/PostRelativeLink.astro'
-import BlogPostsLink from '../../components/BlogPostsLink.astro'
-import BlogTagsLink from '../../components/BlogTagsLink.astro'
-import styles from '../../styles/blog.module.css'
+} from '../../lib/blog-helpers';
+import Layout from '../../layouts/Layout.astro';
+import PostBody from '../../components/PostBody.astro';
+import SideTableOfContents from '../../components/Article/TableOfContents/SideTableOfContents.astro';
+import MainTableOfContents from '../../components/Article/TableOfContents/MainTableOfContents.astro';
+import RelatedBlogSections from '../../components/BlogSections/RelatedBlogSections.astro';
+import ArticleCover from '../../components/Article/Cover/Cover.astro';
+import NoImage from '../../images/no-image.png';
 
 export async function getStaticPaths() {
-  const posts = await getAllPosts()
-  return posts.map((post: interfaces.Post) => ({ params: { slug: post.Slug } }))
+  const posts = await getAllPosts();
+  return posts.map((post: interfaces.Post) => ({ params: { slug: post.Slug } }));
 }
 
-const { slug } = Astro.params
+const { slug } = Astro.params;
 
-const post = await getPostBySlug(slug)
+const post = await getPostBySlug(slug);
+
 if (!post) {
-  throw new Error('Post not found. slug: ${slug}')
+  throw new Error(`Post not found. slug: ${slug}`);
 }
 
-const [blocks, allPosts, rankedPosts, recentPosts, tags, postsHavingSameTag] =
-  await Promise.all([
-    getAllBlocksByBlockId(post.PageId),
-    getAllPosts(),
-    getRankedPosts(),
-    getPosts(5),
-    getAllTags(),
-    getPostsByTag(post.Tags[0]?.name, 6),
-  ])
+const [
+  blocks,
+  postsHavingSameTag,
+] = await Promise.all([
+  getAllBlocksByBlockId(post.PageId),
+  getPostsByTags(getTagNamesByPost(post), 6),
+]);
 
 const fileAtacchedBlocks = extractTargetBlocks('image', blocks)
   .concat(extractTargetBlocks('file', blocks))
   .filter((block) => {
     if (!block) {
-      return false
+      return false;
     }
-    const imageOrFile = block.Image || block.File
-    return imageOrFile && imageOrFile.File && imageOrFile.File.Url
-  })
+    const imageOrFile = block.Image || block.File;
+    return imageOrFile && imageOrFile.File && imageOrFile.File.Url;
+  });
 
 // Download files
 await Promise.all(
   fileAtacchedBlocks
-    .map(async (block) => {
-      const expiryTime = (block.Image || block.File).File.ExpiryTime
-      if (Date.parse(expiryTime) > Date.now()) {
-        return Promise.resolve(block)
+    .map(async (block: interfaces.Block) => {
+      let expiryTime = '';
+      if (block.Image) {
+        expiryTime = block.Image.File?.ExpiryTime as string;
+      } else if (block.File) {
+        expiryTime = block.File.File?.ExpiryTime as string;
       }
-      return getBlock(block.Id)
+      if (Date.parse(expiryTime) > Date.now()) {
+        return Promise.resolve(block);
+      }
+      return getBlock(block.Id);
     })
-    .map((promise) =>
-      promise.then((block) => {
-        let url!: URL
-        try {
-          url = new URL((block.Image || block.File).File.Url)
-        } catch (err) {
-          console.log('Invalid file URL')
-          return Promise.reject()
+    .map((promise) => promise.then((block) => {
+      let url!: URL;
+      try {
+        if (block.Image) {
+          url = new URL(block.Image.File?.Url as string);
+        } else if (block.File) {
+          url = new URL(block.File.File?.Url as string);
+        } else {
+          throw new Error('Invalid file URL');
         }
-        return Promise.resolve(url)
-      })
-    )
-    .map((promise) => promise.then(downloadFile))
-)
+      } catch (err) {
+        console.log('Invalid file URL');
+        return Promise.reject();
+      }
+      return Promise.resolve(url);
+    }))
+    .map((promise) => promise.then(downloadFile)),
+);
 
-const currentPostIndex = allPosts.findIndex((post) => post.Slug === slug)
-const prevPost = allPosts[currentPostIndex + 1]
-const nextPost = allPosts[currentPostIndex - 1]
-
-let ogImage = ''
-if (post.FeaturedImage && post.FeaturedImage.Url) {
-  ogImage = new URL(filePath(new URL(post.FeaturedImage.Url)), Astro.site)
+let ogImage: string = '';
+if (post.FeaturedImage) {
+  if (post.FeaturedImage.Url) {
+    ogImage = post.FeaturedImage.Url;
+  } else {
+    const ogImageURL = new URL(filePath(new URL(post.FeaturedImage.Url)), Astro.site);
+    ogImage = ogImageURL.toString();
+  }
 }
+
+const headings = blocks.filter((b: interfaces.Block) => ['heading_1', 'heading_2', 'heading_3'].includes(b.Type));
+const title = post.Title;
+const icon = post.Icon;
+const date = post.Date;
+const tags = post.Tags;
 ---
 
 <Layout
@@ -99,29 +111,145 @@ if (post.FeaturedImage && post.FeaturedImage.Url) {
   path={getPostLink(post.Slug)}
   ogImage={ogImage}
 >
-  <div slot="main" class={styles.main}>
-    <div class={styles.post}>
-      <PostDate post={post} />
-      <PostTags post={post} />
-      <PostTitle post={post} enableLink={false} />
-      <PostBody blocks={blocks} />
-      <PostTags post={post} />
+  <div slot="main">
+    <div
+      class="article-with-toc"
+    >
+      <div class="main-article">
+        <ArticleCover title={title} icon={icon} date={date} tags={tags} coverImage={ogImage === '' ? NoImage.src : ogImage}/>
+        <MainTableOfContents headings={headings} />
+        <PostBody blocks={blocks} />
+        <button
+          id="ToTopButton" title="Go to top"
+          class="py-2 px-3 sm:py-3 sm:px-4 inline-flex items-center gap-x-2 text-sm font-semibold rounded-full border border-transparent bg-emerald-600 text-white hover:bg-emerald-700 disabled:opacity-50 disabled:pointer-events-none"
+        >
+          ↑
+        </button>
+      </div>
 
-      <footer>
-        <PostRelativeLink prevPost={prevPost} nextPost={nextPost} />
-      </footer>
+      <div
+        class="side-toc"
+      >
+        <SideTableOfContents headings={headings} />
+      </div>
     </div>
-  </div>
-
-  <div slot="aside" class="aside">
-    <BlogPostsLink
-      heading="Posts in the same category"
-      posts={postsHavingSameTag.filter(
-        (p: interfaces.Post) => p.Slug !== post.Slug
-      )}
-    />
-    <BlogPostsLink heading="Recommended" posts={rankedPosts} />
-    <BlogPostsLink heading="Latest posts" posts={recentPosts} />
-    <BlogTagsLink heading="Categories" tags={tags} />
+    <div class="text-center">
+      <h1 class="md:w-[80vw] lg:w-[70vw] md:mx-auto pt-10 text-3xl sm:text-4xl font-bold text-gray-800 dark:text-gray-200">
+        関連記事
+      </h1>
+    </div>
+    <RelatedBlogSections posts={retrieveRelatedPostsWithoutCurrentPost(postsHavingSameTag, post)} />
   </div>
 </Layout>
+
+<style>
+.article-with-toc {
+  display: flex;
+  flex-direction: row;
+  width: 90vw;
+  margin-inline: auto;
+}
+
+.main-article {
+  width: 100%;
+}
+
+.side-toc {
+  display: none;
+}
+
+@media (min-width: 768px) {
+  .article-with-toc {
+    width: 80vw;
+  }
+}
+
+@media (min-width: 1024px) {
+  .article-with-toc {
+    width: 70vw;
+  }
+}
+
+@media (min-width: 1280px) {
+  .article-with-toc {
+    width: 85vw;
+    margin-left: 15vw;
+  }
+
+  .main-article {
+    width: var(--article-max-width);
+  }
+
+  .side-toc {
+    display: flex;
+    position: sticky;
+    top: 148px;
+    flex-direction: column;
+    align-self: flex-start;
+    align-items: center;
+    width: calc(85vw - var(--article-max-width));
+  }
+}
+
+#ToTopButton {
+  display: none;
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  z-index: 99;
+  font-size: 1rem;
+}
+</style>
+
+<script>
+document.addEventListener("scroll", function() {
+  const wrapper = document.querySelector(".article-with-toc") as Element;
+
+  // contents lenght should be same as tocLinks length
+  const contents = document
+    .querySelectorAll("a.adjust-sticky-header-toggle, a.adjust-sticky-header");
+  const tocLinks = document.querySelectorAll("a.toc-link");
+
+  const contentPositions: any[] = [];
+  contents.forEach((content, i) => {
+    const startPosition =
+      content.getBoundingClientRect().top;
+    const endPosition = contents.item(i + 1)
+      ? contents.item(i + 1).getBoundingClientRect().top
+      : wrapper.scrollHeight;
+    contentPositions.push({ startPosition, endPosition });
+  });
+
+  tocLinks.forEach((tocLink, i) => {
+    const { startPosition, endPosition } = contentPositions[i];
+    if (
+      startPosition < 1 &&
+      endPosition >= 1
+    ) {
+      tocLink.classList.add('active');
+    } else {
+      tocLink.classList.remove('active');
+    }
+  });
+});
+
+const ToTopButton = document.getElementById("ToTopButton");
+ToTopButton?.addEventListener('click', toTopFunction);
+
+window.onscroll = function() { scrollFunction() };
+
+function scrollFunction() {
+  if (ToTopButton) {
+    if (document.body.scrollTop > 20 || document.documentElement.scrollTop > 20) {
+    ToTopButton.style.display = "block";
+    } else {
+      ToTopButton.style.display = "none";
+    }
+  }
+}
+
+function toTopFunction() {
+  document.body.scrollTop = 0; // For Safari
+  document.documentElement.scrollTop = 0; // For Chrome, Firefox, IE and Opera
+}
+</script>

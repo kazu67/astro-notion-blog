@@ -1,16 +1,16 @@
 ---
-import * as interfaces from '../../lib/interfaces.ts'
-import { snakeToKebab } from '../../lib/style-helpers.ts'
-import RichText from './RichText.astro'
-import NotionBlocks from '../NotionBlocks.astro'
-import '../../styles/notion-color.css'
+import * as interfaces from '../../lib/interfaces';
+import { snakeToKebab } from '../../lib/style-helpers';
+import RichText from './RichText.astro';
+import NotionBlocks from '../NotionBlocks.astro';
+import '../../styles/notion-color.css';
 
 export interface Props {
   block: interfaces.Block
   headings: interfaces.Block[]
 }
 
-const { block, headings } = Astro.props
+const { block, headings } = Astro.props;
 ---
 
 <div class="to-do">
@@ -25,15 +25,15 @@ const { block, headings } = Astro.props
                 <s>
                   <RichText richText={richText} />
                 </s>
-              )
+              );
             }
-            return <RichText richText={richText} />
+            return <RichText richText={richText} />;
           })}
           {b.HasChildren && (
             <NotionBlocks blocks={b.ToDo.Children} headings={headings} />
           )}
         </div>
-      )
+      ),
     )
   }
 </div>

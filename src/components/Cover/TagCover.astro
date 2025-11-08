@@ -1,0 +1,17 @@
+---
+export interface Props {
+  category: string;
+}
+
+const { category = '' } = Astro.props;
+---
+<div
+  class="block w-full text-center py-10"
+>
+  <h1 class="md:mx-auto text-4xl sm:text-6xl font-bold text-gray-800 dark:text-gray-200 block">
+    CATEGORY
+  </h1>
+  <span class="md:mx-auto text-2xl sm:text-4xl pt-3 sm:pt-5 font-bold text-gray-600 dark:text-gray-200 underline underline-offset-8 block">
+    { category }
+  </span>
+</div>

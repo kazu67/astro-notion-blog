@@ -1,11 +1,12 @@
 import { defineConfig } from 'astro/config';
+import tailwind from '@astrojs/tailwind';
 import { CUSTOM_DOMAIN, BASE_PATH } from './src/server-constants';
 import CoverImageDownloader from './src/integrations/cover-image-downloader';
 import CustomIconDownloader from './src/integrations/custom-icon-downloader';
 import FeaturedImageDownloader from './src/integrations/featured-image-downloader';
 import PublicNotionCopier from './src/integrations/public-notion-copier';
 
-const getSite = function () {
+const getSite = () => {
   if (CUSTOM_DOMAIN) {
     return new URL(BASE_PATH, `https://${CUSTOM_DOMAIN}`).toString();
   }
@@ -24,7 +25,7 @@ const getSite = function () {
       `https://${new URL(process.env.CF_PAGES_URL).host
         .split('.')
         .slice(1)
-        .join('.')}`
+        .join('.')}`,
     ).toString();
   }
 
@@ -40,5 +41,6 @@ export default defineConfig({
     CustomIconDownloader(),
     FeaturedImageDownloader(),
     PublicNotionCopier(),
+    tailwind(),
   ],
 });

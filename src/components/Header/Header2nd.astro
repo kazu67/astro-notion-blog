@@ -1,0 +1,19 @@
+---
+import SearchButton from '../SearchButton.astro';
+import GithubIcon from '../icon/GithubIcon.astro';
+import XIcon from '../icon/XIcon.astro';
+import FaceBookIcon from '../icon/FaceBookIcon.astro';
+---
+<header class="md:w-[80vw] lg:w-[70vw] mb-auto mx-auto flex flex-wrap sm:justify-start sm:flex-nowrap z-30 text-sm hidden sm:block">
+  <nav class="w-full px-6 sm:flex sm:items-center sm:justify-between" aria-label="Global">
+    <div class="flex items-center justify-between w-full sm:w-6/12">
+      {<SearchButton />}
+    </div>
+
+    <div class="flex gap-5 mb-5 flex-row sm:mt-5 sm:ps-5">
+      {<GithubIcon />}
+      {<XIcon />}
+      {<FaceBookIcon />}
+    </div>
+  </nav>
+</header>

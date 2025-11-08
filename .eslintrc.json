@@ -2,11 +2,21 @@
   "plugins": ["@typescript-eslint"],
   "extends": [
     "plugin:@typescript-eslint/recommended",
-    "plugin:astro/recommended"
+    "plugin:astro/recommended",
+    "airbnb-base",
+    "airbnb-typescript/base"
   ],
+  "parserOptions": {
+    "project": true,
+    "extraFileExtensions": [".astro"]
+  },
+  "ignorePatterns": ["public/scripts/**"],
   "rules": {
     "@typescript-eslint/no-unused-vars": "error",
-    "@typescript-eslint/no-explicit-any": "error"
+    "@typescript-eslint/no-explicit-any": "error",
+    "no-await-in-loop": "off",
+    "no-underscore-dangle": "off",
+    "import/prefer-default-export": "off"
   },
   "overrides": [
     {
@@ -16,7 +26,12 @@
         "parser": "@typescript-eslint/parser",
         "extraFileExtensions": [".astro"]
       },
-      "rules": {}
+      "rules": {
+        "indent": ["error", 2, { "SwitchCase": 1 }],
+        "import/prefer-default-export": "off",
+        "no-nested-ternary": "off",
+        "max-len": "off"
+      }
     }
   ]
 }

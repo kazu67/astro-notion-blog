@@ -1,24 +1,24 @@
 ---
-import * as interfaces from '../../lib/interfaces.ts'
-import { buildHeadingId } from '../../lib/blog-helpers.ts'
-import RichText from './RichText.astro'
-import NotionBlocks from '../NotionBlocks.astro'
+import * as interfaces from '../../lib/interfaces';
+import { buildHeadingId } from '../../lib/blog-helpers';
+import RichText from './RichText.astro';
+import NotionBlocks from '../NotionBlocks.astro';
 
 export interface Props {
   block: interfaces.Block
   headings: interfaces.Block[]
 }
 
-const { block, headings } = Astro.props
+const { block, headings } = Astro.props;
 
-const id = buildHeadingId(block.Heading3)
+const id = buildHeadingId(block.Heading3);
 ---
 
 {
   block.Heading3.IsToggleable ? (
     <details class="toggle">
       <summary>
-        <a href={`#${id}`} id={id}>
+        <a href={`#${id}`} id={id} class="adjust-sticky-header-toggle">
           <h5>
             {block.Heading3.RichTexts.map((richText: interfaces.RichText) => (
               <RichText richText={richText} />
@@ -33,7 +33,7 @@ const id = buildHeadingId(block.Heading3)
       </div>
     </details>
   ) : (
-    <a href={`#${id}`} id={id}>
+    <a href={`#${id}`} id={id} class="adjust-sticky-header">
       <h5>
         {block.Heading3.RichTexts.map((richText: interfaces.RichText) => (
           <RichText richText={richText} />
@@ -44,8 +44,26 @@ const id = buildHeadingId(block.Heading3)
 }
 
 <style>
+  /*
+    sticky headerを使用しているため、目次で各セクションへと飛ぶにはこれで調整する必要がある
+    ref: https://www.at-create.co.jp/staff-blog/css/341.html
+  */
+  .adjust-sticky-header {
+    display: block;
+    margin-top: calc(-1 * var(--header1-max-height));
+    padding-top: var(--header1-max-height);
+    pointer-events: none;
+  }
+  .adjust-sticky-header-toggle {
+    margin-top: calc(
+      -1 *
+      (var(--header1-max-height) + var(--adjust-sticky-header-toggle-h3-height))
+    );
+    padding-top: calc(var(--header1-max-height) + var(--adjust-sticky-header-toggle-h3-height));
+    pointer-events: none;
+  }
   h5 {
-    margin: 0.9em 0 0.3em;
+    margin: 0.3em 0 0.3em;
     color: var(--fg);
     font-size: 1.25rem;
   }

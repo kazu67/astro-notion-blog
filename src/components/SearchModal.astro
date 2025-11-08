@@ -1,12 +1,11 @@
 ---
 ---
-
 <div class="search-modal-container">
   <div class="overlay"></div>
 
-  <div class="search-modal">
+  <div class="search-modal overflow-auto">
     <div class="search-prompt">
-      <input type="text" placeholder="Search..." />
+      <input id="search-input" type="text" placeholder="Search..." />
     </div>
     <div class="search-result">
       <ul>
@@ -44,6 +43,8 @@
     width: 60%;
     border-radius: 6px;
     background-color: var(--bg);
+    overflow: scroll;
+    height: 80vh;
   }
   @media (max-width: 640px) {
     div.search-modal {
@@ -102,7 +103,7 @@
 
 <script>
   document.addEventListener('DOMContentLoaded', async () => {
-    let feedItems = []
+    let feedItems: any[] = []
     let fetched = false
 
     async function openModal() {
@@ -119,7 +120,7 @@
       document.querySelector('.search-modal-container').style.display = 'none'
     }
 
-    function handleKeydown(event) {
+    function handleKeydown(event: any) {
       if (event.keyCode === 13) {
         // Enter
         select()

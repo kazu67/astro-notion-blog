@@ -1,0 +1,16 @@
+{
+  "editor.defaultFormatter": "dbaeumer.vscode-eslint",
+  "eslint.useESLintClass": true,
+  "eslint.validate": [
+    "html",
+    "javascript",
+    "typescript",
+    "astro" // this line is required to lint astro files
+  ],
+  "editor.codeActionsOnSave": {
+    "source.fixAll.eslint": "always"
+  },
+  "[astro]": {
+    "editor.defaultFormatter": "astro-build.astro-vscode"
+  }
+}

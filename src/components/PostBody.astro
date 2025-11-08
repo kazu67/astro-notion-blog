@@ -1,16 +1,16 @@
 ---
-import { Block } from '../lib/interfaces.ts'
-import NotionBlocks from './NotionBlocks.astro'
+import { type Block } from '../lib/interfaces';
+import NotionBlocksAstro from './NotionBlocks.astro';
 
 export interface Props {
   blocks: Block[]
 }
 
-const { blocks } = Astro.props
+const { blocks } = Astro.props;
 ---
 
 <div class="post-body">
-  <NotionBlocks blocks={blocks} isRoot={true} />
+  <NotionBlocksAstro blocks={blocks} isRoot={true} level={1} headings={[]}/>
 </div>
 
 <style>

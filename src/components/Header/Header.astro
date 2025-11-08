@@ -1,0 +1,14 @@
+---
+import Header1st from './Header1st.astro';
+import Header2nd from './Header2nd.astro';
+
+export interface Props {
+  categories: string[];
+  siteName: string;
+}
+
+const { categories = [], siteName = "" } = Astro.props;
+---
+
+<Header1st categories={categories} siteName={siteName}/>
+<Header2nd />
