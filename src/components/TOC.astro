@@ -1,0 +1,58 @@
+---
+/** デスクトップ用 TOC（右サイド） */
+---
+<nav aria-label="Table of contents" class="text-sm leading-6">
+  <h2 class="mb-2 font-semibold text-gray-700">目次</h2>
+  <ol class="space-y-1" id="toc-root"></ol>
+</nav>
+
+<script is:raw>
+document.addEventListener("DOMContentLoaded", () => {
+  const article = document.querySelector("article");
+  const tocRoot = document.getElementById("toc-root");
+  if (!article || !tocRoot) return;
+
+  // h2〜h4 を対象にTOC生成（IDがない見出しは自動付与）
+  const headings = [...article.querySelectorAll("h2, h3, h4")];
+  headings.forEach((h, idx) => {
+    if (!h.id) h.id = "h-" + (idx + 1);
+  });
+
+  const frag = document.createDocumentFragment();
+  headings.forEach((h) => {
+    const li = document.createElement("li");
+    const a = document.createElement("a");
+    a.href = "#" + h.id;
+    a.textContent = h.textContent ?? "";
+    a.className = "toc-link block py-1 hover:underline";
+    // 階層によってインデント
+    const level = Number(h.tagName.substring(1)); // 2,3,4
+    li.style.paddingLeft = ((level - 2) * 12) + "px";
+    li.appendChild(a);
+    frag.appendChild(li);
+  });
+  tocRoot.appendChild(frag);
+
+  // スクロールスパイ：現在節に .active を付与
+  const links = [...tocRoot.querySelectorAll(".toc-link")];
+  const opts = { rootMargin: "0px 0px -70% 0px", threshold: [0, 1.0] };
+  const map = new Map(headings.map(h => [h.id, links.find(a => a.getAttribute("href") === "#" + h.id)]));
+
+  const onIntersect = (entries) => {
+    entries.forEach(entry => {
+      const a = map.get(entry.target.id);
+      if (!a) return;
+      if (entry.isIntersecting) {
+        links.forEach(x => x.classList.remove("active"));
+        a.classList.add("active");
+      }
+    });
+  };
+  const io = new IntersectionObserver(onIntersect, opts);
+  headings.forEach(h => io.observe(h));
+});
+</script>
+
+<style is:raw>
+.toc-link.active { font-weight: 600; text-decoration: underline; }
+</style>

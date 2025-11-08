@@ -1,0 +1,67 @@
+---
+/** モバイル用 TOC（<details> を GSAP でアニメ） */
+---
+<details class="js-details rounded-md border p-3">
+  <summary class="js-summary cursor-pointer select-none font-medium">目次</summary>
+  <div class="js-content mt-2 overflow-hidden">
+    <ol id="mtoc-root" class="space-y-1 text-sm leading-6"></ol>
+  </div>
+</details>
+
+<script type="module">
+  import { gsap } from "gsap";
+
+  const setUpAccordion = () => {
+    const el = document.querySelector(".js-details");
+    if (!el) return;
+    const summary = el.querySelector(".js-summary");
+    const content = el.querySelector(".js-content");
+    const OPEN = "is-opened";
+
+    summary?.addEventListener("click", (e) => {
+      e.preventDefault();
+      const opened = el.classList.contains(OPEN);
+      if (opened) {
+        el.classList.remove(OPEN);
+        gsap.to(content, {
+          height: 0, opacity: 0, duration: 0.3, ease: "power3.out",
+          onComplete: () => el.removeAttribute("open")
+        });
+      } else {
+        el.classList.add(OPEN);
+        el.setAttribute("open", "true");
+        gsap.fromTo(content, { height: 0, opacity: 0 }, {
+          height: "auto", opacity: 1, duration: 0.3, ease: "power3.out"
+        });
+      }
+    });
+  };
+
+  const buildTOC = () => {
+    const article = document.querySelector("article");
+    const root = document.getElementById("mtoc-root");
+    if (!article || !root) return;
+
+    const headings = [...article.querySelectorAll("h2, h3, h4")];
+    headings.forEach((h, idx) => { if (!h.id) h.id = "h-" + (idx + 1); });
+
+    const frag = document.createDocumentFragment();
+    headings.forEach((h) => {
+      const li = document.createElement("li");
+      const a = document.createElement("a");
+      a.href = "#" + h.id;
+      a.textContent = h.textContent ?? "";
+      a.className = "block py-1 hover:underline";
+      const level = Number(h.tagName.substring(1));
+      li.style.paddingLeft = ((level - 2) * 12) + "px";
+      li.appendChild(a);
+      frag.appendChild(li);
+    });
+    root.appendChild(frag);
+  };
+
+  document.addEventListener("DOMContentLoaded", () => {
+    buildTOC();
+    setUpAccordion();
+  });
+</script>
