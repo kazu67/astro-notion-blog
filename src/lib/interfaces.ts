@@ -1,14 +1,16 @@
+export type Icon = FileObject | Emoji | null
+
 export interface Database {
   Title: string
   Description: string
-  Icon: FileObject | Emoji | null
+  Icon: Icon
   Cover: FileObject | null
 }
 
 export interface Post {
   PageId: string
   Title: string
-  Icon: FileObject | Emoji | null
+  Icon: Icon
   Cover: FileObject | null
   Slug: string
   Date: string
@@ -16,6 +18,7 @@ export interface Post {
   Excerpt: string
   FeaturedImage: FileObject | null
   Rank: number
+  badge?: string
 }
 
 export interface Block {
@@ -46,6 +49,7 @@ export interface Block {
   ColumnList?: ColumnList
   TableOfContents?: TableOfContents
   LinkToPage?: LinkToPage
+  ListItems?: Block[]
 }
 
 export interface Paragraph {
@@ -144,7 +148,7 @@ export interface Equation {
 
 export interface Callout {
   RichTexts: RichText[]
-  Icon: FileObject | Emoji | null
+  Icon: Icon
   Color: string
   Children?: Block[]
 }
@@ -264,4 +268,16 @@ export interface Mention {
 
 export interface Reference {
   Id: string
+}
+
+export interface StaticTagParams {
+  params: {
+    tag: string
+    page: string
+  }
+}
+
+export interface NavbarAnchor {
+  content: string
+  href: string
 }

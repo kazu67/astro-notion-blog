@@ -1,3 +1,5 @@
+/* eslint-disable no-param-reassign */
+/* eslint-disable @typescript-eslint/no-use-before-define */
 import fetch from 'node-fetch'
 import { BASE_PATH, REQUEST_TIMEOUT_MS } from '../server-constants'
 import type {
@@ -18,8 +20,8 @@ export const filePath = (url: URL): string => {
 export const extractTargetBlocks = (
   blockType: string,
   blocks: Block[]
-): Block[] => {
-  return blocks
+): Block[] =>
+  blocks
     .reduce((acc: Block[], block) => {
       if (block.Type === blockType) {
         acc.push(block)
@@ -27,7 +29,7 @@ export const extractTargetBlocks = (
 
       if (block.ColumnList && block.ColumnList.Columns) {
         acc = acc.concat(
-          _extractTargetBlockFromColums(blockType, block.ColumnList.Columns)
+          extractTargetBlockFromColums(blockType, block.ColumnList.Columns)
         )
       } else if (block.BulletedListItem && block.BulletedListItem.Children) {
         acc = acc.concat(
@@ -70,13 +72,12 @@ export const extractTargetBlocks = (
       return acc
     }, [])
     .flat()
-}
 
-const _extractTargetBlockFromColums = (
+const extractTargetBlockFromColums = (
   blockType: string,
   columns: Column[]
-): Block[] => {
-  return columns
+): Block[] =>
+  columns
     .reduce((acc: Block[], column) => {
       if (column.Children) {
         acc = acc.concat(extractTargetBlocks(blockType, column.Children))
@@ -84,7 +85,6 @@ const _extractTargetBlockFromColums = (
       return acc
     }, [])
     .flat()
-}
 
 export const buildURLToHTMLMap = async (
   urls: URL[]
@@ -97,9 +97,7 @@ export const buildURLToHTMLMap = async (
       }, REQUEST_TIMEOUT_MS)
 
       return fetch(url.toString(), { signal: controller.signal })
-        .then((res) => {
-          return res.text()
-        })
+        .then((res) => res.text())
         .catch(() => {
           console.log('Request was aborted')
           return ''
@@ -118,25 +116,22 @@ export const buildURLToHTMLMap = async (
   }, {})
 }
 
-export const getStaticFilePath = (path: string): string => {
-  return pathJoin(BASE_PATH, path)
-}
+export const getStaticFilePath = (path: string): string =>
+  pathJoin(BASE_PATH, path)
 
 export const getNavLink = (nav: string) => {
   if ((!nav || nav === '/') && BASE_PATH) {
-    return pathJoin(BASE_PATH, '') + '/'
+    return `${pathJoin(BASE_PATH, '')}/`
   }
 
   return pathJoin(BASE_PATH, nav)
 }
 
-export const getPostLink = (slug: string) => {
-  return pathJoin(BASE_PATH, `/posts/${slug}`)
-}
+export const getPostLink = (slug: string) =>
+  pathJoin(BASE_PATH, `/posts/${slug}`)
 
-export const getTagLink = (tag: string) => {
-  return pathJoin(BASE_PATH, `/posts/tag/${encodeURIComponent(tag)}`)
-}
+export const getTagLink = (tag: string) =>
+  pathJoin(BASE_PATH, `/posts/tag/${encodeURIComponent(tag)}`)
 
 export const getPageLink = (page: number, tag: string) => {
   if (page === 1) {
@@ -163,13 +158,13 @@ export const getDateStr = (date: string) => {
   }
 
   const y = dt.getFullYear()
-  const m = ('00' + (dt.getMonth() + 1)).slice(-2)
-  const d = ('00' + dt.getDate()).slice(-2)
-  return y + '-' + m + '-' + d
+  const m = `00${dt.getMonth() + 1}`.slice(-2)
+  const d = `00${dt.getDate()}`.slice(-2)
+  return `${y}-${m}-${d}`
 }
 
-export const buildHeadingId = (heading: Heading1 | Heading2 | Heading3) => {
-  return heading.RichTexts.map((richText: RichText) => {
+export const buildHeadingId = (heading: Heading1 | Heading2 | Heading3) =>
+  heading.RichTexts.map((richText: RichText) => {
     if (!richText.Text) {
       return ''
     }
@@ -177,7 +172,6 @@ export const buildHeadingId = (heading: Heading1 | Heading2 | Heading3) => {
   })
     .join()
     .trim()
-}
 
 export const isTweetURL = (url: URL): boolean => {
   if (
@@ -246,8 +240,14 @@ export const isFullAmazonURL = (url: URL): boolean => {
   return false
 }
 
-export const isAmazonURL = (url: URL): boolean => {
-  return isShortAmazonURL(url) || isFullAmazonURL(url)
+export const isAmazonURL = (url: URL): boolean =>
+  isShortAmazonURL(url) || isFullAmazonURL(url)
+
+export const isGoogleMapURL = (url: URL): boolean => {
+  if (url.hostname === 'www.google.com' && url.pathname.startsWith('/maps')) {
+    return true
+  }
+  return false
 }
 
 export const isYouTubeURL = (url: URL): boolean => {
@@ -271,20 +271,20 @@ export const parseYouTubeVideoId = (url: URL): string => {
 
   if (url.hostname === 'youtu.be') {
     return url.pathname.split('/')[1]
-  } else if (url.pathname === '/watch') {
+  }
+  if (url.pathname === '/watch') {
     return url.searchParams.get('v') || ''
-  } else {
-    const elements = url.pathname.split('/')
+  }
+  const elements = url.pathname.split('/')
 
-    if (elements.length < 2) return ''
+  if (elements.length < 2) return ''
 
-    if (
-      elements[1] === 'v' ||
-      elements[1] === 'embed' ||
-      elements[1] === 'live'
-    ) {
-      return elements[2]
-    }
+  if (
+    elements[1] === 'v' ||
+    elements[1] === 'embed' ||
+    elements[1] === 'live'
+  ) {
+    return elements[2]
   }
 
   return ''

@@ -1,0 +1,24 @@
+---
+import Layout from '../layouts/Layout.astro';
+import Cover from '../components/Cover/NotFoundCover.astro';
+---
+
+<Layout title='' description='' path='/' ogImage=''>
+  <div slot="main" class="md:w-[80vw] lg:w-[70vw] px-4 py-10 sm:px-6 lg:px-8 lg:py-14 mx-auto size-full">
+    <div class="block w-full text-center">
+      <h1 class="md:mx-auto text-2xl sm:text-4xl font-bold text-gray-800 dark:text-gray-200 block">
+        404 NOT FOUND
+      </h1>
+    </div>
+    <Cover />
+    <div class="block w-full text-center">
+      <a
+        type="button"
+        href="/"
+        class="py-3 px-4 inline-flex items-center gap-x-2 text-sm
+        md:text-base lg:text-lg xl:text-xl font-semibold rounded-lg border border-transparent bg-gray-800 text-white hover:bg-gray-900 disabled:opacity-50 disabled:pointer-events-none dark:bg-white dark:text-gray-800">
+        トップページへ戻る
+      </a>
+    </div>
+  </div>
+</Layout>

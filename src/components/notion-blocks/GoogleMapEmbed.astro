@@ -1,0 +1,28 @@
+---
+export interface Props {
+  url: URL
+}
+
+const { url } = Astro.props;
+---
+
+<div>
+  <blockquote>
+    <iframe
+      src={url.toString()}
+      class="google-map-embed"
+      style="border:0;" allowfullscreen="" loading="lazy" referrerpolicy="no-referrer-when-downgrade">
+    </iframe>
+  </blockquote>
+</div>
+
+<style>
+  .google-map-embed {
+    aspect-ratio: 5 / 3;
+    width: 100%;
+    height: 100%;
+    max-width: 640px;
+    margin-top: 1rem;
+    margin-bottom: 1rem;
+  }
+</style>

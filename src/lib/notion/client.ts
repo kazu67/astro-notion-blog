@@ -1,15 +1,20 @@
+/* eslint-disable @typescript-eslint/no-use-before-define */
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import fs, { createWriteStream } from 'node:fs'
 import { pipeline } from 'node:stream/promises'
-import axios, { AxiosResponse } from 'axios'
+import axios, { type AxiosResponse } from 'axios'
 import sharp from 'sharp'
 import retry from 'async-retry'
 import ExifTransformer from 'exif-be-gone'
+import { Client, APIResponseError } from '@notionhq/client'
 import {
   NOTION_API_SECRET,
   DATABASE_ID,
   NUMBER_OF_POSTS_PER_PAGE,
+  NUMBER_OF_RELATED_POSTS_PER_PAGE,
   REQUEST_TIMEOUT_MS,
 } from '../../server-constants'
+import { SLUG_PAGE_ID_MAPPING } from '../../slug_to_pageid'
 import type * as responses from './responses'
 import type * as requestParams from './request-params'
 import type {
@@ -39,7 +44,6 @@ import type {
   TableRow,
   TableCell,
   Toggle,
-  ColumnList,
   Column,
   TableOfContents,
   RichText,
@@ -52,23 +56,20 @@ import type {
   Mention,
   Reference,
 } from '../interfaces'
-// eslint-disable-next-line @typescript-eslint/no-var-requires
-import { Client, APIResponseError } from '@notionhq/client'
 
 const client = new Client({
   auth: NOTION_API_SECRET,
 })
 
-let postsCache: Post[] | null = null
 let dbCache: Database | null = null
+let allPostCache: Post[] | null = null
 
 const numberOfRetry = 2
 
 export async function getAllPosts(): Promise<Post[]> {
-  if (postsCache !== null) {
-    return Promise.resolve(postsCache)
+  if (allPostCache) {
+    return allPostCache
   }
-
   const params: requestParams.QueryDatabase = {
     database_id: DATABASE_ID,
     filter: {
@@ -93,16 +94,19 @@ export async function getAllPosts(): Promise<Post[]> {
         direction: 'descending',
       },
     ],
+    // maximum page size is 100
+    // ref: https://developers.notion.com/reference/post-database-query
     page_size: 100,
   }
 
   let results: responses.PageObject[] = []
-  while (true) {
+  let hasMorePost = true
+  while (hasMorePost) {
     const res = await retry(
       async (bail) => {
         try {
           return (await client.databases.query(
-            params as any // eslint-disable-line @typescript-eslint/no-explicit-any
+            params as any
           )) as responses.QueryDatabaseResponse
         } catch (error: unknown) {
           if (error instanceof APIResponseError) {
@@ -121,16 +125,18 @@ export async function getAllPosts(): Promise<Post[]> {
     results = results.concat(res.results)
 
     if (!res.has_more) {
+      hasMorePost = false
       break
     }
 
-    params['start_cursor'] = res.next_cursor as string
+    params.start_cursor = res.next_cursor as string
   }
 
-  postsCache = results
-    .filter((pageObject) => _validPageObject(pageObject))
-    .map((pageObject) => _buildPost(pageObject))
-  return postsCache
+  allPostCache = results
+    .filter((pageObject) => isValidPageObject(pageObject))
+    .map((pageObject) => buildPost(pageObject))
+
+  return allPostCache
 }
 
 export async function getPosts(pageSize = 10): Promise<Post[]> {
@@ -145,7 +151,8 @@ export async function getRankedPosts(pageSize = 10): Promise<Post[]> {
     .sort((a, b) => {
       if (a.Rank > b.Rank) {
         return -1
-      } else if (a.Rank === b.Rank) {
+      }
+      if (a.Rank === b.Rank) {
         return 0
       }
       return 1
@@ -154,25 +161,74 @@ export async function getRankedPosts(pageSize = 10): Promise<Post[]> {
 }
 
 export async function getPostBySlug(slug: string): Promise<Post | null> {
+  const pageId = SLUG_PAGE_ID_MAPPING[slug]
+
+  if (pageId) {
+    return getPostByPageId(pageId)
+  }
+
   const allPosts = await getAllPosts()
   return allPosts.find((post) => post.Slug === slug) || null
 }
 
-export async function getPostByPageId(pageId: string): Promise<Post | null> {
-  const allPosts = await getAllPosts()
-  return allPosts.find((post) => post.PageId === pageId) || null
+export async function getPostByPageId(
+  pageId: string,
+  version = 1
+): Promise<Post | null> {
+  switch (version) {
+    case 1:
+      return client.pages
+        .retrieve({ page_id: pageId })
+        .then((res) => buildPost(res as responses.PageObject))
+        .catch(() => null)
+    case 2:
+      return getAllPosts().then(
+        (posts) => posts.find((post) => post.PageId === pageId) || null
+      )
+    default:
+      return null
+  }
 }
 
 export async function getPostsByTag(
   tagName: string,
   pageSize = 10
 ): Promise<Post[]> {
-  if (!tagName) return []
+  if (!tagName) {
+    return []
+  }
 
   const allPosts = await getAllPosts()
   return allPosts
     .filter((post) => post.Tags.find((tag) => tag.name === tagName))
     .slice(0, pageSize)
+}
+
+export function getTagNamesByPost(post: Post): string[] {
+  return post.Tags.map((tag) => tag.name).filter((name) => !!name)
+}
+
+export async function getPostsByTags(
+  tagNames: string[],
+  pageSize = 10
+): Promise<Post[]> {
+  if (!tagNames.length) {
+    return []
+  }
+
+  const allPosts = await getAllPosts()
+  return allPosts
+    .filter((post) => post.Tags.find((tag) => tagNames.includes(tag.name)))
+    .slice(0, pageSize)
+}
+
+export function retrieveRelatedPostsWithoutCurrentPost(
+  posts: Post[],
+  currentPost: Post
+): Post[] {
+  return posts
+    .filter((post) => post.PageId !== currentPost.PageId)
+    .slice(0, NUMBER_OF_RELATED_POSTS_PER_PAGE)
 }
 
 // page starts from 1 not 0
@@ -265,19 +321,19 @@ export async function getAllBlocksByBlockId(blockId: string): Promise<Block[]> {
         break
       }
 
-      params['start_cursor'] = res.next_cursor as string
+      params.start_cursor = res.next_cursor as string
     }
   }
 
-  const allBlocks = results.map((blockObject) => _buildBlock(blockObject))
+  const allBlocks = results.map((blockObject) => buildBlock(blockObject))
 
-  for (let i = 0; i < allBlocks.length; i++) {
+  for (let i = 0; i < allBlocks.length; i += 1) {
     const block = allBlocks[i]
 
     if (block.Type === 'table' && block.Table) {
-      block.Table.Rows = await _getTableRows(block.Id)
+      block.Table.Rows = await getTableRows(block.Id)
     } else if (block.Type === 'column_list' && block.ColumnList) {
-      block.ColumnList.Columns = await _getColumns(block.Id)
+      block.ColumnList.Columns = await getColumns(block.Id)
     } else if (
       block.Type === 'bulleted_list_item' &&
       block.BulletedListItem &&
@@ -293,7 +349,7 @@ export async function getAllBlocksByBlockId(blockId: string): Promise<Block[]> {
     } else if (block.Type === 'to_do' && block.ToDo && block.HasChildren) {
       block.ToDo.Children = await getAllBlocksByBlockId(block.Id)
     } else if (block.Type === 'synced_block' && block.SyncedBlock) {
-      block.SyncedBlock.Children = await _getSyncedBlockChildren(block)
+      block.SyncedBlock.Children = await getSyncedBlockChildren(block)
     } else if (block.Type === 'toggle' && block.Toggle) {
       block.Toggle.Children = await getAllBlocksByBlockId(block.Id)
     } else if (
@@ -355,7 +411,7 @@ export async function getBlock(blockId: string): Promise<Block> {
     }
   )
 
-  return _buildBlock(res)
+  return buildBlock(res)
 }
 
 export async function getAllTags(): Promise<SelectProperty[]> {
@@ -390,12 +446,12 @@ export async function downloadFile(url: URL) {
     return Promise.resolve()
   }
 
-  if (!res || res.status != 200) {
+  if (!res || res.status !== 200) {
     console.log(res)
     return Promise.resolve()
   }
 
-  const dir = './public/notion/' + url.pathname.split('/').slice(-2)[0]
+  const dir = `./public/notion/${url.pathname.split('/').slice(-2)[0]}`
   if (!fs.existsSync(dir)) {
     fs.mkdirSync(dir)
   }
@@ -412,7 +468,7 @@ export async function downloadFile(url: URL) {
     stream = stream.pipe(rotate)
   }
   try {
-    return pipeline(stream, new ExifTransformer(), writeStream)
+    return await pipeline(stream, new ExifTransformer(), writeStream)
   } catch (err) {
     console.log(err)
     writeStream.end()
@@ -420,6 +476,7 @@ export async function downloadFile(url: URL) {
   }
 }
 
+// Maybe need to modify cache
 export async function getDatabase(): Promise<Database> {
   if (dbCache !== null) {
     return Promise.resolve(dbCache)
@@ -490,7 +547,7 @@ export async function getDatabase(): Promise<Database> {
   return database
 }
 
-function _buildBlock(blockObject: responses.BlockObject): Block {
+function buildBlock(blockObject: responses.BlockObject): Block {
   const block: Block = {
     Id: blockObject.id,
     Type: blockObject.type,
@@ -501,7 +558,7 @@ function _buildBlock(blockObject: responses.BlockObject): Block {
     case 'paragraph':
       if (blockObject.paragraph) {
         const paragraph: Paragraph = {
-          RichTexts: blockObject.paragraph.rich_text.map(_buildRichText),
+          RichTexts: blockObject.paragraph.rich_text.map(buildRichText),
           Color: blockObject.paragraph.color,
         }
         block.Paragraph = paragraph
@@ -510,7 +567,7 @@ function _buildBlock(blockObject: responses.BlockObject): Block {
     case 'heading_1':
       if (blockObject.heading_1) {
         const heading1: Heading1 = {
-          RichTexts: blockObject.heading_1.rich_text.map(_buildRichText),
+          RichTexts: blockObject.heading_1.rich_text.map(buildRichText),
           Color: blockObject.heading_1.color,
           IsToggleable: blockObject.heading_1.is_toggleable,
         }
@@ -520,7 +577,7 @@ function _buildBlock(blockObject: responses.BlockObject): Block {
     case 'heading_2':
       if (blockObject.heading_2) {
         const heading2: Heading2 = {
-          RichTexts: blockObject.heading_2.rich_text.map(_buildRichText),
+          RichTexts: blockObject.heading_2.rich_text.map(buildRichText),
           Color: blockObject.heading_2.color,
           IsToggleable: blockObject.heading_2.is_toggleable,
         }
@@ -530,7 +587,7 @@ function _buildBlock(blockObject: responses.BlockObject): Block {
     case 'heading_3':
       if (blockObject.heading_3) {
         const heading3: Heading3 = {
-          RichTexts: blockObject.heading_3.rich_text.map(_buildRichText),
+          RichTexts: blockObject.heading_3.rich_text.map(buildRichText),
           Color: blockObject.heading_3.color,
           IsToggleable: blockObject.heading_3.is_toggleable,
         }
@@ -541,7 +598,7 @@ function _buildBlock(blockObject: responses.BlockObject): Block {
       if (blockObject.bulleted_list_item) {
         const bulletedListItem: BulletedListItem = {
           RichTexts:
-            blockObject.bulleted_list_item.rich_text.map(_buildRichText),
+            blockObject.bulleted_list_item.rich_text.map(buildRichText),
           Color: blockObject.bulleted_list_item.color,
         }
         block.BulletedListItem = bulletedListItem
@@ -551,7 +608,7 @@ function _buildBlock(blockObject: responses.BlockObject): Block {
       if (blockObject.numbered_list_item) {
         const numberedListItem: NumberedListItem = {
           RichTexts:
-            blockObject.numbered_list_item.rich_text.map(_buildRichText),
+            blockObject.numbered_list_item.rich_text.map(buildRichText),
           Color: blockObject.numbered_list_item.color,
         }
         block.NumberedListItem = numberedListItem
@@ -560,7 +617,7 @@ function _buildBlock(blockObject: responses.BlockObject): Block {
     case 'to_do':
       if (blockObject.to_do) {
         const toDo: ToDo = {
-          RichTexts: blockObject.to_do.rich_text.map(_buildRichText),
+          RichTexts: blockObject.to_do.rich_text.map(buildRichText),
           Checked: blockObject.to_do.checked,
           Color: blockObject.to_do.color,
         }
@@ -570,7 +627,7 @@ function _buildBlock(blockObject: responses.BlockObject): Block {
     case 'video':
       if (blockObject.video) {
         const video: Video = {
-          Caption: blockObject.video.caption?.map(_buildRichText) || [],
+          Caption: blockObject.video.caption?.map(buildRichText) || [],
           Type: blockObject.video.type,
         }
         if (
@@ -585,7 +642,7 @@ function _buildBlock(blockObject: responses.BlockObject): Block {
     case 'image':
       if (blockObject.image) {
         const image: Image = {
-          Caption: blockObject.image.caption?.map(_buildRichText) || [],
+          Caption: blockObject.image.caption?.map(buildRichText) || [],
           Type: blockObject.image.type,
         }
         if (
@@ -609,7 +666,7 @@ function _buildBlock(blockObject: responses.BlockObject): Block {
     case 'file':
       if (blockObject.file) {
         const file: File = {
-          Caption: blockObject.file.caption?.map(_buildRichText) || [],
+          Caption: blockObject.file.caption?.map(buildRichText) || [],
           Type: blockObject.file.type,
         }
         if (blockObject.file.type === 'external' && blockObject.file.external) {
@@ -627,8 +684,8 @@ function _buildBlock(blockObject: responses.BlockObject): Block {
     case 'code':
       if (blockObject.code) {
         const code: Code = {
-          Caption: blockObject.code.caption?.map(_buildRichText) || [],
-          RichTexts: blockObject.code.rich_text.map(_buildRichText),
+          Caption: blockObject.code.caption?.map(buildRichText) || [],
+          RichTexts: blockObject.code.rich_text.map(buildRichText),
           Language: blockObject.code.language,
         }
         block.Code = code
@@ -637,7 +694,7 @@ function _buildBlock(blockObject: responses.BlockObject): Block {
     case 'quote':
       if (blockObject.quote) {
         const quote: Quote = {
-          RichTexts: blockObject.quote.rich_text.map(_buildRichText),
+          RichTexts: blockObject.quote.rich_text.map(buildRichText),
           Color: blockObject.quote.color,
         }
         block.Quote = quote
@@ -675,7 +732,7 @@ function _buildBlock(blockObject: responses.BlockObject): Block {
         }
 
         const callout: Callout = {
-          RichTexts: blockObject.callout.rich_text.map(_buildRichText),
+          RichTexts: blockObject.callout.rich_text.map(buildRichText),
           Icon: icon,
           Color: blockObject.callout.color,
         }
@@ -703,7 +760,7 @@ function _buildBlock(blockObject: responses.BlockObject): Block {
     case 'toggle':
       if (blockObject.toggle) {
         const toggle: Toggle = {
-          RichTexts: blockObject.toggle.rich_text.map(_buildRichText),
+          RichTexts: blockObject.toggle.rich_text.map(buildRichText),
           Color: blockObject.toggle.color,
           Children: [],
         }
@@ -746,10 +803,9 @@ function _buildBlock(blockObject: responses.BlockObject): Block {
       }
       break
     case 'column_list':
-      const columnList: ColumnList = {
+      block.ColumnList = {
         Columns: [],
       }
-      block.ColumnList = columnList
       break
     case 'table_of_contents':
       if (blockObject.table_of_contents) {
@@ -768,15 +824,17 @@ function _buildBlock(blockObject: responses.BlockObject): Block {
         block.LinkToPage = linkToPage
       }
       break
+    default:
+      break
   }
 
   return block
 }
 
-async function _getTableRows(blockId: string): Promise<TableRow[]> {
+async function getTableRows(blockId: string, version = 1): Promise<TableRow[]> {
   let results: responses.BlockObject[] = []
 
-  if (fs.existsSync(`tmp/${blockId}.json`)) {
+  if (version === 2 && fs.existsSync(`tmp/${blockId}.json`)) {
     results = JSON.parse(fs.readFileSync(`tmp/${blockId}.json`, 'utf-8'))
   } else {
     const params: requestParams.RetrieveBlockChildren = {
@@ -810,7 +868,7 @@ async function _getTableRows(blockId: string): Promise<TableRow[]> {
         break
       }
 
-      params['start_cursor'] = res.next_cursor as string
+      params.start_cursor = res.next_cursor as string
     }
   }
 
@@ -825,7 +883,7 @@ async function _getTableRows(blockId: string): Promise<TableRow[]> {
     if (blockObject.type === 'table_row' && blockObject.table_row) {
       const cells: TableCell[] = blockObject.table_row.cells.map((cell) => {
         const tableCell: TableCell = {
-          RichTexts: cell.map(_buildRichText),
+          RichTexts: cell.map(buildRichText),
         }
 
         return tableCell
@@ -838,10 +896,10 @@ async function _getTableRows(blockId: string): Promise<TableRow[]> {
   })
 }
 
-async function _getColumns(blockId: string): Promise<Column[]> {
+async function getColumns(blockId: string, version = 1): Promise<Column[]> {
   let results: responses.BlockObject[] = []
 
-  if (fs.existsSync(`tmp/${blockId}.json`)) {
+  if (version === 2 && fs.existsSync(`tmp/${blockId}.json`)) {
     results = JSON.parse(fs.readFileSync(`tmp/${blockId}.json`, 'utf-8'))
   } else {
     const params: requestParams.RetrieveBlockChildren = {
@@ -875,11 +933,11 @@ async function _getColumns(blockId: string): Promise<Column[]> {
         break
       }
 
-      params['start_cursor'] = res.next_cursor as string
+      params.start_cursor = res.next_cursor as string
     }
   }
 
-  return await Promise.all(
+  return Promise.all(
     results.map(async (blockObject) => {
       const children = await getAllBlocksByBlockId(blockObject.id)
 
@@ -895,7 +953,7 @@ async function _getColumns(blockId: string): Promise<Column[]> {
   )
 }
 
-async function _getSyncedBlockChildren(block: Block): Promise<Block[]> {
+async function getSyncedBlockChildren(block: Block): Promise<Block[]> {
   let originalBlock: Block = block
   if (
     block.SyncedBlock &&
@@ -914,7 +972,7 @@ async function _getSyncedBlockChildren(block: Block): Promise<Block[]> {
   return children
 }
 
-function _validPageObject(pageObject: responses.PageObject): boolean {
+function isValidPageObject(pageObject: responses.PageObject): boolean {
   const prop = pageObject.properties
   return (
     !!prop.Page.title &&
@@ -925,7 +983,7 @@ function _validPageObject(pageObject: responses.PageObject): boolean {
   )
 }
 
-function _buildPost(pageObject: responses.PageObject): Post {
+function buildPost(pageObject: responses.PageObject): Post {
   const prop = pageObject.properties
 
   let icon: FileObject | Emoji | null = null
@@ -993,7 +1051,7 @@ function _buildPost(pageObject: responses.PageObject): Post {
   return post
 }
 
-function _buildRichText(richTextObject: responses.RichTextObject): RichText {
+function buildRichText(richTextObject: responses.RichTextObject): RichText {
   const annotation: Annotation = {
     Bold: richTextObject.annotations.bold,
     Italic: richTextObject.annotations.italic,

@@ -1,0 +1,43 @@
+---
+import GithubIcon from '../icon/BlackAndWhite/GithubIcon.astro';
+import XIcon from '../icon/BlackAndWhite/XIcon.astro';
+import FaceBookIcon from '../icon/BlackAndWhite/FaceBookIcon.astro';
+import FooterContent from './FooterContent.astro';
+
+export interface Props {
+  siteName: string;
+}
+
+const { siteName = "This Site Name" } = Astro.props;
+---
+
+<footer class="bg-gray-900 w-full">
+  <div class="w-full max-w-[85rem] py-10 px-4 sm:px-6 lg:px-8 lg:pt-20 mx-auto">
+    <!-- Grid -->
+    <div class="grid grid-cols-3 gap-6">
+      <FooterContent content={siteName} href='/' />
+      <FooterContent content="HOME" href='/' />
+      <FooterContent content="ABOUT" href='/about' />
+    </div>
+    <!-- End Grid -->
+
+    <div class="mt-5 sm:mt-12 grid gap-y-2 sm:gap-y-0 sm:flex sm:justify-between sm:items-center">
+      <div class="flex justify-between items-center">
+        <p
+          class="text-sm text-gray-400"
+          translate="no"
+        >
+          © 2024 Zhong.
+        </p>
+      </div>
+
+      <!-- Social Brand Icons -->
+      <div>
+        <GithubIcon />
+        <XIcon />
+        <FaceBookIcon
+      </div>
+      <!-- End Social Brand Icons -->
+    </div>
+  </div>
+</footer>

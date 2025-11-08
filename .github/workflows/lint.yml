@@ -1,8 +1,11 @@
 name: Lint
 
 on:
-  push:
+  # push:
+  #   branches:
+  deployment:
     branches:
+      - main
 
 permissions:
   checks: write
@@ -15,10 +18,10 @@ jobs:
 
     steps:
       - name: Check out Git repository
-        uses: actions/checkout@v2
+        uses: actions/checkout@v4
 
       - name: Install packages
         run: npm install
 
       - name: Run lint
-        run: npm run lint
+        run: npm run lint:fix

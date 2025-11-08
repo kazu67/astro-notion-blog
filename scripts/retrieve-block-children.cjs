@@ -6,14 +6,13 @@ const notion = new Client({ auth: process.env.NOTION_API_SECRET });
 
 const requestDuration = 300;
 
-const retry = (maxRetries, fn) => {
-  return fn().catch(function (err) {
+const retry = (maxRetries, fn) =>
+  fn().catch((err) => {
     if (maxRetries <= 0) {
       throw err;
     }
     return retry(maxRetries - 1, fn);
   });
-};
 
 const retrieveAndWriteBlockChildren = async (blockId) => {
   const params = { block_id: blockId };
@@ -33,7 +32,7 @@ const retrieveAndWriteBlockChildren = async (blockId) => {
       break;
     }
 
-    params['start_cursor'] = res.next_cursor;
+    params.start_cursor = res.next_cursor;
   }
 
   fs.writeFileSync(`tmp/${blockId}.json`, JSON.stringify(results));

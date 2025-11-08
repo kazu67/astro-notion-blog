@@ -1,0 +1,57 @@
+---
+import {
+  type Block, type Heading1, type Heading2, type Heading3,
+  type RichText,
+} from '../../../lib/interfaces';
+import { buildHeadingId } from '../../../lib/blog-helpers';
+
+export interface Props {
+  headings: Block[];
+}
+
+const { headings = [] } = Astro.props;
+---
+<div class="side-toc-contents">
+  <ul class="text-slate-700 text-sm leading-6">
+    <div class="text-center text-lg">
+      目次
+    </div>
+    {
+      headings.map((headingBlock: Block) => {
+        const heading = headingBlock.Heading1
+        || headingBlock.Heading2
+        || headingBlock.Heading3 as (Heading1 | Heading2 | Heading3);
+
+        let indentClass = '';
+        if (headingBlock.Heading2) {
+          indentClass = 'ml-4';
+        } else if (headingBlock.Heading3) {
+          indentClass = 'ml-8';
+        }
+
+        return (
+          <li>
+            <a
+              href={`#${buildHeadingId(heading)}`}
+              class={`${indentClass} block py-1 font-medium hover:text-emerald-500 dark:text-slate-400 dark:hover:text-emerald-400 toc-link`}
+            >
+              {heading.RichTexts.map(
+                (richText: RichText) => richText.PlainText,
+              ).join('')}
+            </a>
+          </li>
+        );
+      })
+    }
+  </ul>
+</div>
+
+<style>
+  .side-toc-contents {
+    overflow: auto;
+    max-height: calc(100vh - 148px - 16px);
+  }
+  .active {
+    color: rgb(16 185 129);
+  }
+</style>

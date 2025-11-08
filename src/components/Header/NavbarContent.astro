@@ -1,0 +1,21 @@
+---
+import type { NavbarAnchor } from '../../lib/interfaces';
+
+import NavbarContentAnchor from './NavbarContentAnchor.astro';
+import NavbarContentDropdown from './NavbarContentDropdown/NavbarContentDropdown.astro';
+
+export interface Props {
+  categories: string[]
+}
+
+const { categories = ['Development'] } = Astro.props;
+const categoryAnchors: NavbarAnchor[] = categories.map((category) => ({
+  href: `/posts/tag/${category}`,
+  content: category,
+}));
+---
+<div class="flex flex-col gap-y-4 gap-x-0 mt-5 sm:flex-row sm:items-center sm:justify-end sm:gap-y-0 sm:gap-x-7 sm:mt-0 sm:ps-7">
+  <NavbarContentAnchor href="/" content="HOME" />
+  <NavbarContentAnchor href="/about" content="ABOUT" />
+  <NavbarContentDropdown title="CATEGORIES" anchorContents={categoryAnchors}/>
+</div>

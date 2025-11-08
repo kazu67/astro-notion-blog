@@ -3,12 +3,11 @@ export interface Props {
   url: URL
 }
 
-const { url } = Astro.props
+const { url } = Astro.props;
 
-const postURL =
-  url.hostname === 'x.com' || url.hostname === 'www.x.com'
-    ? new URL(url.pathname, 'https://twitter.com')
-    : url
+const postURL = url.hostname === 'x.com' || url.hostname === 'www.x.com'
+  ? new URL(url.pathname, 'https://twitter.com')
+  : url;
 ---
 
 <div class="tweet-embed">

@@ -1,0 +1,38 @@
+---
+---
+<div class="balloon rounded text-center w-full h-[5rem] sm:h-[6rem]">
+  <h1 class="md:mx-auto text-3xl sm:text-4xl font-bold text-gray-800 dark:text-gray-200">
+    CATEGORY
+  </h1>
+  <h1 class="md:mx-auto text-1xl sm:text-2xl font-bold text-gray-800 dark:text-gray-200">
+    CATEGORY
+  </h1>
+</div>
+
+<style>
+/* 吹き出し本体 */
+.balloon{
+  position: relative;
+  padding: 15px;
+  background-color: white;
+  display: inline-block;     /* 横幅を自動で変更 */
+  box-shadow: 6px 6px 0px 0px green;  /* 影をつける */
+  z-index: 2;
+}
+
+/* beforeで三角を表現 */
+.balloon::before{
+  content: '';
+  position: absolute;
+  left: -15px;
+  top: 15px;
+  display: block;
+  width: 0;
+  height: 0;
+  border-right: 15px solid transparent;
+  border-bottom: 15px solid white;
+  border-left: 15px solid transparent;
+  transform: rotate(60deg);
+  z-index: 3;
+}
+</style>

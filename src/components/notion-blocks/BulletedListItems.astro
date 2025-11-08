@@ -1,30 +1,35 @@
 ---
-import * as interfaces from '../../lib/interfaces.ts'
-import { snakeToKebab } from '../../lib/style-helpers.ts'
-import RichText from './RichText.astro'
-import NotionBlocks from '../NotionBlocks.astro'
-import '../../styles/notion-color.css'
+import type { Block, RichText } from '../../lib/interfaces';
+import { snakeToKebab } from '../../lib/style-helpers';
+import RichTextComponent from './RichText.astro';
+import NotionBlocks from '../NotionBlocks.astro';
+import '../../styles/notion-color.css';
 
 export interface Props {
-  block: interfaces.Block
-  headings: interfaces.Block[]
+  block: Block
+  level: number
+  headings: Block[]
 }
 
-const { block, headings } = Astro.props
+const { block, level, headings } = Astro.props;
+
+const listTypes = ['square', 'disc', 'circle'];
 ---
 
-<ul>
+<ul class={listTypes[level % 3]}>
   {
-    block.ListItems.filter(
-      (b: interfaces.Block) => b.Type === 'bulleted_list_item'
-    ).map((b: interfaces.Block) => (
-      <li class={snakeToKebab(b.BulletedListItem.Color)}>
-        {b.BulletedListItem.RichTexts.map((richText: interfaces.RichText) => (
-          <RichText richText={richText} />
+    block.ListItems?.filter(
+      (b: Block) => b.Type === 'bulleted_list_item',
+    ).map((b: Block) => (
+      <li class={snakeToKebab(b.BulletedListItem?.Color as string)}>
+        {b.BulletedListItem?.RichTexts.map((richText: RichText) => (
+          <RichTextComponent richText={richText} />
         ))}
         {b.HasChildren && (
           <NotionBlocks
-            blocks={b.BulletedListItem.Children}
+            isRoot={false}
+            blocks={b.BulletedListItem?.Children as Block[]}
+            level={level + 1}
             headings={headings}
           />
         )}
@@ -36,5 +41,17 @@ const { block, headings } = Astro.props
 <style>
   ul {
     font-size: 1rem;
+  }
+
+  .disc {
+    list-style-type: disc;
+  }
+
+  .circle {
+    list-style-type: circle;
+  }
+
+  .square {
+    list-style-type: square;
   }
 </style>

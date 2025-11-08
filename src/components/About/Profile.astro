@@ -1,0 +1,98 @@
+---
+import MyIcon from '../../images/my-icon.svg';
+
+export interface Props {
+  iconSrc: string;
+}
+
+const { iconSrc = MyIcon ? MyIcon.src : "" } = Astro.props;
+---
+<div class="block w-full text-center">
+  <h1 class="md:mx-auto text-2xl sm:text-4xl font-bold text-gray-800 dark:text-gray-200 block">
+    PROFILE
+  </h1>
+</div>
+
+<div class="grid md:grid-cols-5 gap-2 md:gap-10 pt-10 pb-2 md:pb-10">
+  <!-- left side -->
+  <div class="md:col-span-3">
+    <div>
+      <img
+        class="max-w-lg"
+        src={iconSrc}
+      />
+    </div>
+  </div>
+  <!-- left side end -->
+
+  <!-- right side -->
+  <div class="md:col-span-2">
+    <div class="pb-5">
+      <div class="pb-2 inline-flex items-center justify-between gap-x-3 w-full md:text-lg font-semibold text-start text-gray-800 dark:text-gray-200">
+        Name / 名前
+      </div>
+      <div class="w-full" >
+        <p class="text-gray-600 dark:text-gray-400">
+          First Name / Last Name
+        </p>
+      </div>
+    </div>
+    <div class="pb-5">
+      <div class="pb-2 inline-flex items-center justify-between gap-x-3 w-full md:text-lg font-semibold text-start text-gray-800 dark:text-gray-200">
+        Job / 仕事
+      </div>
+      <div class="w-full" >
+        <p class="text-gray-600 dark:text-gray-400">
+          Software Engineer
+        </p>
+      </div>
+    </div>
+    <div class="pb-2">
+      <div class="pb-2 inline-flex items-center justify-between gap-x-3 w-full md:text-lg font-semibold text-start text-gray-800 dark:text-gray-200">
+          Career / 経歴
+      </div>
+      <div class="w-full" >
+        <p class="text-gray-600 dark:text-gray-400">
+            University → First Company → Second Company
+        </p>
+      </div>
+    </div>
+    <div class="hs-accordion-group">
+      <div
+        class="hs-accordion pb-1" id="hs-basic-with-title-and-arrow-stretched-heading-one"
+      >
+        <button class="hs-accordion-toggle group inline-flex items-center justify-between w-full md:text-lg font-semibold text-start text-gray-800 rounded-lg transition dark:text-gray-200 dark:focus:outline-none dark:focus:ring-1 dark:focus:ring-gray-600">
+          Details of My Career / 詳細経歴
+          <svg
+            class="hs-accordion-active:hidden block flex-shrink-0 size-5 text-gray-600 dark:text-gray-400"
+            xmlns="http://www.w3.org/2000/svg"
+            width="24" height="24" viewBox="0 0 24 24" fill="none"
+            stroke="currentColor" stroke-width="2"
+            stroke-linecap="round" stroke-linejoin="round"
+          >
+            <path d="m6 9 6 6 6-6"/>
+          </svg>
+          <svg
+            class="hs-accordion-active:block hidden flex-shrink-0 size-5 text-gray-600 dark:text-gray-400"
+            xmlns="http://www.w3.org/2000/svg"
+            width="24" height="24" viewBox="0 0 24 24" fill="none"
+            stroke="currentColor" stroke-width="2"
+            stroke-linecap="round" stroke-linejoin="round"
+          >
+            <path d="m18 15-6-6-6 6"/>
+          </svg>
+        </button>
+        <div
+          id="hs-basic-with-title-and-arrow-stretched-collapse-one"
+          class="hs-accordion-content hidden w-full overflow-hidden transition-[height] duration-300"
+        >
+          <p class="text-gray-600 dark:text-gray-400">
+            My detailed career history here.
+            <br>※ Note: This is a sample text.
+          </p>
+        </div>
+      </div>
+    </div>
+  </div>
+  <!-- right side -->
+</div>
