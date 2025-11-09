@@ -10,27 +10,45 @@ import Pagination from '../components/Pagination.astro';
 import BlogSections from '../components/BlogSections/BlogSections.astro';
 import Cover from '../components/Cover/HomeCover.astro';
 
-const [posts, numberOfPages, database] = await Promise.all([
+const [postsRaw, numberOfPages, database] = await Promise.all([
   getPosts(NUMBER_OF_POSTS_PER_PAGE),
   getNumberOfPages(),
   getDatabase(),
 ]);
 
-const iconSrc = database.Icon.Url;
-const coverSrc = database.Cover.Url;
-const message = database.Description;
-const messages = message.split('\n');
+// Notion の file/external 両対応 + null セーフ
+const iconSrc =
+  database?.Icon?.Url ??
+  database?.Icon?.file?.url ??
+  database?.Icon?.external?.url ??
+  '/favicon-32x32.png'; // 適宜プロジェクト内の既存画像に
+
+const coverSrc =
+  database?.Cover?.Url ??
+  database?.Cover?.file?.url ??
+  database?.Cover?.external?.url ??
+  ''; // なくてもOKにする
+
+const message = typeof database?.Description === 'string' ? database.Description : '';
+const messages = message ? message.split('\n').filter(Boolean) : [];
+
+// posts が null/undefined でも安全に
+const posts = Array.isArray(postsRaw) ? postsRaw : [];
 ---
 
-<Layout title='' description='' path='/' ogImage=''>
+<Layout title="" description="" path="/" ogImage="">
   <div slot="main" class="md:w-[80vw] lg:w-[70vw] flex flex-col mx-auto size-full">
-    <Cover iconSrc={iconSrc} coverSrc={coverSrc} messages={messages} />
+
+    { (iconSrc || coverSrc || messages.length) && (
+      <Cover iconSrc={iconSrc} coverSrc={coverSrc} messages={messages} />
+    ) }
 
     <BlogSections posts={posts} />
+
     <Pagination
       currentPage={1}
-      numberOfPages={numberOfPages}
-      tag=''
+      numberOfPages={numberOfPages ?? 1}
+      tag=""
     />
   </div>
 </Layout>
