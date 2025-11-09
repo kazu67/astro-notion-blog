@@ -1,6 +1,7 @@
 English | [日本語](README.ja.md)
 
 # astro-notion-blog-template
+
 [![GitHub stars](https://img.shields.io/github/stars/YuanzhongLi/astro-notion-blog-template)](https://github.com/YuanzhongLi/astro-notion-blog-template/stargazers)
 
 <img src="/public/default-og-image.png" width="480">
@@ -14,8 +15,10 @@ enables you to create a blog using [Notion](https://www.notion.so/) and generate
 - :white_check_mark: Take advantage of **the official Notion APIs**
 
 For the details, please refer [astro-notion-blog](https://github.com/otoyo/astro-notion-blog). show a greate gratitude
- to otoyo-san and please give a star to the original repository if you like it.
+to otoyo-san and please give a star to the original repository if you like it.
+
 ## astro-notion-blog
+
 [![GitHub stars](https://img.shields.io/github/stars/otoyo/astro-notion-blog)](https://github.com/otoyo/astro-notion-blog/stargazers)
 [![GitHub license](https://img.shields.io/github/license/otoyo/astro-notion-blog)](https://github.com/otoyo/astro-notion-blog/blob/main/LICENSE)
 [![GitHub sponsors](https://img.shields.io/static/v1?label=Sponsor&message=%E2%9D%A4&logo=GitHub&color=%23fe8e86)](https://github.com/sponsors/otoyo)
@@ -23,22 +26,27 @@ For the details, please refer [astro-notion-blog](https://github.com/otoyo/astro
 ## :camera_flash: Screenshots
 
 ### PC
+
 <img src="/README/PC_image.png" width="600">
 
 ### Smartphone
+
 <img src="/README/Mobile_image.png" width="300">
 
 ## :globe_with_meridians: Production
+
 [astro-notion-blog-template.pages.dev](https://astro-notion-blog-template.pages.dev/)
 
 ## :motor_scooter: Quick Start
 
 ### Requirements
+
 - [Notion](https://www.notion.so/)
 - [Cloudflare Pages](https://pages.cloudflare.com/)
 - Git
 
 ### Steps
+
 1. Simply duplicate [astro-notion-blog template](https://otoyo.notion.site/e2c5fa2e8660452988d6137ba57fd974?v=abe305cd8b3d467285e91a2a85f4d8de) into your Notion workspace.
 2. Once you've duplicated the page (database), customize it to your liking by changing the icon, title, and description.
    - The blog title and About page are hardcoded, so you'll need to modify the actual code in those sections.
@@ -57,10 +65,10 @@ For the details, please refer [astro-notion-blog](https://github.com/otoyo/astro
 7. Go to [Cloudflare Pages](https://pages.cloudflare.com/) and sign in
 8. Create new project with "Connect to Git" with your forked repository `<your-account>/astro-notion-blog`, then click "Begin setup"
 9. In "Build settings" section,
-    1. Select "Astro" as "Framework preset"
-    2. Open "Environment Variables (advanced)" and set `NODE_VERSION`, `NOTION_API_SECRET` and `DATABASE_ID`
-       - `NODE_VERSION` is `v18.16.0` or higher
-       - [How to deploy a site with Git](https://docs.astro.build/en/guides/deploy/cloudflare/#how-to-deploy-a-site-with-git) is helpful
+   1. Select "Astro" as "Framework preset"
+   2. Open "Environment Variables (advanced)" and set `NODE_VERSION`, `NOTION_API_SECRET` and `DATABASE_ID`
+      - `NODE_VERSION` is `v18.16.0` or higher
+      - [How to deploy a site with Git](https://docs.astro.build/en/guides/deploy/cloudflare/#how-to-deploy-a-site-with-git) is helpful
 
 <img src="https://user-images.githubusercontent.com/1063435/213967061-06f488fe-0b42-40a5-8f19-ac441f0168ff.png" width="400">
 

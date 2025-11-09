@@ -3,6 +3,4 @@ interface SlugPageIdMapping {
 }
 
 // This is for hard code mapping of slug to page id
-export const SLUG_PAGE_ID_MAPPING: SlugPageIdMapping = {
-
-};
+export const SLUG_PAGE_ID_MAPPING: SlugPageIdMapping = {}
