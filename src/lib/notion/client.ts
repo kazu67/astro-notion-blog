@@ -472,9 +472,19 @@ export async function getDatabase(): Promise<Database> {
 
   let cover: FileObject | null = null
   if (res.cover) {
+    let url = res.cover.external?.url || res.cover?.file?.url || ''
+
+    // 【追加】ここも同様に書き換え
+    if (url.includes('secure.s3.us-west-2.amazonaws.com')) {
+      const urlObj = new URL(url)
+      const dir = urlObj.pathname.split('/').slice(-2)[0]
+      const filename = decodeURIComponent(urlObj.pathname.split('/').slice(-1)[0])
+      url = `/notion/${dir}/${filename}`
+    }
+
     cover = {
       Type: res.cover.type,
-      Url: res.cover.external?.url || res.cover?.file?.url || '',
+      Url: url,
     }
   }
 
@@ -950,9 +960,19 @@ function _buildPost(pageObject: responses.PageObject): Post {
 
   let cover: FileObject | null = null
   if (pageObject.cover) {
+    let url = pageObject.cover.external?.url || pageObject.cover.file?.url || ''
+
+    // 【追加】S3のURLならローカルパスに書き換える
+    if (url.includes('secure.s3.us-west-2.amazonaws.com')) {
+      const urlObj = new URL(url)
+      const dir = urlObj.pathname.split('/').slice(-2)[0]
+      const filename = decodeURIComponent(urlObj.pathname.split('/').slice(-1)[0])
+      url = `/notion/${dir}/${filename}`
+    }
+
     cover = {
       Type: pageObject.cover.type,
-      Url: pageObject.cover.external?.url || '',
+      Url: url,
     }
   }
 
