@@ -1006,25 +1006,46 @@ function buildPost(pageObject: responses.PageObject): Post {
 
   let cover: FileObject | null = null
   if (pageObject.cover) {
+    // 1. まず通常のURLを取得
+    let url = pageObject.cover.external?.url || pageObject.cover.file?.url || ''
+
+    // 2. 【重要】もしNotionのS3 URLなら、ローカルパスに強制置換
+    if (url.includes('secure.s3.us-west-2.amazonaws.com')) {
+      const urlObj = new URL(url)
+      const dir = urlObj.pathname.split('/').slice(-2)[0]
+      const filename = decodeURIComponent(urlObj.pathname.split('/').slice(-1)[0])
+      url = `/notion/${dir}/${filename}`
+    }
+
     cover = {
       Type: pageObject.cover.type,
-      Url: pageObject.cover.external?.url || '',
+      Url: url,
     }
   }
 
   let featuredImage: FileObject | null = null
   if (prop.FeaturedImage.files && prop.FeaturedImage.files.length > 0) {
+    let url = ''
+    let expiryTime = ''
     if (prop.FeaturedImage.files[0].external) {
-      featuredImage = {
-        Type: prop.FeaturedImage.type,
-        Url: prop.FeaturedImage.files[0].external.url,
-      }
+      url = prop.FeaturedImage.files[0].external.url
     } else if (prop.FeaturedImage.files[0].file) {
-      featuredImage = {
-        Type: prop.FeaturedImage.type,
-        Url: prop.FeaturedImage.files[0].file.url,
-        ExpiryTime: prop.FeaturedImage.files[0].file.expiry_time,
-      }
+      url = prop.FeaturedImage.files[0].file.url
+      expiryTime = prop.FeaturedImage.files[0].file.expiry_time
+    }
+
+    // 【重要】ここも同様に置換
+    if (url.includes('secure.s3.us-west-2.amazonaws.com')) {
+      const urlObj = new URL(url)
+      const dir = urlObj.pathname.split('/').slice(-2)[0]
+      const filename = decodeURIComponent(urlObj.pathname.split('/').slice(-1)[0])
+      url = `/notion/${dir}/${filename}`
+    }
+
+    featuredImage = {
+      Type: prop.FeaturedImage.type,
+      Url: url,
+      ExpiryTime: expiryTime,
     }
   }
 
