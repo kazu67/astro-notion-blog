@@ -1013,7 +1013,9 @@ function buildPost(pageObject: responses.PageObject): Post {
     if (url.includes('secure.s3.us-west-2.amazonaws.com')) {
       const urlObj = new URL(url)
       const dir = urlObj.pathname.split('/').slice(-2)[0]
-      const filename = decodeURIComponent(urlObj.pathname.split('/').slice(-1)[0])
+      const filename = decodeURIComponent(
+        urlObj.pathname.split('/').slice(-1)[0]
+      )
       url = `/notion/${dir}/${filename}`
     }
 
@@ -1038,7 +1040,9 @@ function buildPost(pageObject: responses.PageObject): Post {
     if (url.includes('secure.s3.us-west-2.amazonaws.com')) {
       const urlObj = new URL(url)
       const dir = urlObj.pathname.split('/').slice(-2)[0]
-      const filename = decodeURIComponent(urlObj.pathname.split('/').slice(-1)[0])
+      const filename = decodeURIComponent(
+        urlObj.pathname.split('/').slice(-1)[0]
+      )
       url = `/notion/${dir}/${filename}`
     }
 

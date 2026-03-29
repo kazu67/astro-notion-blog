@@ -254,7 +254,6 @@
             for (
               var e = L(t), n = Y(t);
               n && V(n) && 'static' === W(n).position;
-
             )
               n = Y(n);
             return n &&
@@ -274,7 +273,6 @@
                     for (
                       k(n) && (n = n.host);
                       _(n) && ['html', 'body'].indexOf(O(n)) < 0;
-
                     ) {
                       var o = W(n);
                       if (
